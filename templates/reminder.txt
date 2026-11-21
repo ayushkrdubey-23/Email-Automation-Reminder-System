@@ -1,0 +1,13 @@
+Subject: {subject}
+
+Dear {name},
+
+{message}
+
+This is an automated reminder from the Email Automation & Reminder System.
+
+Company: {company}
+Department: {department}
+
+Best regards,
+Automation System
