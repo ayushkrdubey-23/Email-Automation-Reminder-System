@@ -2437,7 +2437,7 @@
         });
 
         document.getElementById('createReminderForm').addEventListener('submit', async (e) => {
-            e.preventDialog || e.preventDefault();
+            e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader" width="16" height="16" style="animation: spin 1s linear infinite;"></i>';
