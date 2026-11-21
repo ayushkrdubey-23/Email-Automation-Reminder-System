@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Automation & Reminder System - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: #2563eb; color: white; padding: 1rem 0; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        header h1 { font-size: 1.5rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 2rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h3 { color: #2563eb; margin-bottom: 1rem; font-size: 1.1rem; }
+        .stat { font-size: 2rem; font-weight: bold; color: #1f2937; }
+        .stat-label { color: #6b7280; font-size: 0.9rem; }
+        .section { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .section h2 { color: #1f2937; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 2px solid #2563eb; padding-bottom: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; color: #374151; font-weight: 600; }
+        tr:hover { background: #f9fafb; }
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+        .badge-sent { background: #dcfce7; color: #166534; }
+        .badge-failed { background: #fee2e2; color: #991b1b; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .btn { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-secondary { background: #6b7280; margin-left: 0.5rem; }
+        .btn-secondary:hover { background: #4b5563; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; }
+        .form-group input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9rem; }
+        .alert { padding: 1rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .loading { color: #6b7280; font-style: italic; }
+        .api-url { font-family: monospace; background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 4px; color: #2563eb; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Email Automation & Reminder System</h1>
+            <p>Dashboard &bull; FastAPI Backend &bull; <span class="api-url">http://localhost:8000/api/</span></p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="alert-success" class="alert alert-success"></div>
+        <div id="alert-error" class="alert alert-error"></div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Total Reminders</h3>
+                <div class="stat" id="stat-total">-</div>
+                <div class="stat-label">All reminders in system</div>
+            </div>
+            <div class="card">
+                <h3>Sent</h3>
+                <div class="stat" id="stat-sent">-</div>
+                <div class="stat-label">Successfully delivered</div>
+            </div>
+            <div class="card">
+                <h3>Failed</h3>
+                <div class="stat" id="stat-failed">-</div>
+                <div class="stat-label">Failed deliveries</div>
+            </div>
+            <div class="card">
+                <h3>Pending</h3>
+                <div class="stat" id="stat-pending">-</div>
+                <div class="stat-label">Waiting to be sent</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Reminders</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <button class="btn" onclick="loadReminders()">Refresh</button>
+                <button class="btn btn-secondary" onclick="sendDueReminders()">Send Due Reminders</button>
+            </div>
+            <table id="reminders-table">
+                <thead>
+                    <tr>
+                        <th>Reminder ID</th>
+                        <th>Contact Email</th>
+                        <th>Subject</th>
+                        <th>Schedule Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="loading">Loading reminders...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Create New Reminder</h2>
+            <form id="create-reminder-form">
+                <div class="form-group">
+                    <label>Reminder ID</label>
+                    <input type="text" id="reminder-id" required placeholder="e.g. REM-001">
+                </div>
+                <div class="form-group">
+                    <label>Contact Email</label>
+                    <input type="email" id="contact-email" required placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" id="subject" required placeholder="Meeting Reminder">
+                </div>
+                <div class="form-group">
+                    <label>Schedule Time (YYYY-MM-DD HH:MM:SS)</label>
+                    <input type="text" id="schedule-time" required placeholder="2026-12-01 09:00:00">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <input type="text" id="message" required placeholder="Don't forget the meeting!">
+                </div>
+                <button type="submit" class="btn">Create Reminder</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Recent Email Logs</h2>
+            <table id="logs-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Recipient</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5" class="loading">Loading logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+
+        function showAlert(elementId, message) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats`);
+                const data = await res.json();
+                document.getElementById('stat-total').textContent = data.total_reminders;
+                document.getElementById('stat-sent').textContent = data.sent;
+                document.getElementById('stat-failed').textContent = data.failed;
+                document.getElementById('stat-pending').textContent = data.pending;
+            } catch (e) {
+                console.error('Failed to load stats', e);
+            }
+        }
+
+        async function loadReminders() {
+            try {
+                const res = await fetch(`${API_BASE}/reminders`);
+                const data = await res.json();
+                const tbody = document.querySelector('#reminders-table tbody');
+                tbody.innerHTML = '';
+                data.forEach(r => {
+                    const badgeClass = r.status === 'sent' ? 'badge-sent' : r.status === 'failed' ? 'badge-failed' : 'badge-pending';
+                    const row = `
+                        <tr>
+                            <td>${r.reminder_id}</td>
+                            <td>${r.contact_email}</td>
+                            <td>${r.subject}</td>
+                            <td>${r.schedule_time}</td>
+                            <td><span class="badge ${badgeClass}">${r.status}</span></td>
+                            <td>
+                                ${r.status === 'pending' ? `<button class="btn" style="padding:0.25rem 0.5rem;font-size:0.8rem;" onclick="sendReminder('${r.reminder_id}')">Send</button>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (e) {
+                console.error('Failed to load reminders', e);
+                document.querySelector('#reminders-table tbody').innerHTML = '<tr><td colspan="6">Error loading reminders</td></tr>';
+            }
+        }
+
+        async function sendReminder(reminderId) {
+            try {
+                const res = await fetch(`${API_BASE}/reminders/${reminderId}/send`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showAlert('alert-success', `Reminder ${reminderId} sent successfully!`);
+                } else {
+                    showAlert('alert-error', `Failed: ${data.message}`);
+                }
+                loadReminders();
+                loadStats();
+            } catch (e) {
+                showAlert('alert-error', 'Error sending reminder');
+            }
+        }
+
+        async function sendDueReminders() {
+            try {
+                const res = await fetch(`${API_BASE}/send-due`, { method: 'POST' });
+                const data = await res.json();
+                showAlert('alert-success', data.message);
+                loadReminders();
+                loadStats();
+            } catch (e) {
+                showAlert('alert-error', 'Error sending due reminders');
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await fetch(`${API_BASE}/logs?limit=20`);
+                const data = await res.json();
+                const tbody = document.querySelector('#logs-table tbody');
+                tbody.innerHTML = '';
+                data.forEach(l => {
+                    const badgeClass = l.status === 'sent' ? 'badge-sent' : 'badge-failed';
+                    const row = `
+                        <tr>
+                            <td>${l.timestamp}</td>
+                            <td>${l.recipient}</td>
+                            <td>${l.subject}</td>
+                            <td><span class="badge ${badgeClass}">${l.status}</span></td>
+                            <td>${l.message || '-'}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (e) {
+                console.error('Failed to load logs', e);
+            }
+        }
+
+        document.getElementById('create-reminder-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const reminder = {
+                reminder_id: document.getElementById('reminder-id').value,
+                contact_email: document.getElementById('contact-email').value,
+                subject: document.getElementById('subject').value,
+                schedule_time: document.getElementById('schedule-time').value,
+                message: document.getElementById('message').value,
+            };
+            try {
+                const res = await fetch(`${API_BASE}/reminders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reminder),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showAlert('alert-success', 'Reminder created successfully!');
+                    document.getElementById('create-reminder-form').reset();
+                    loadReminders();
+                    loadStats();
+                } else {
+                    showAlert('alert-error', data.detail || 'Failed to create reminder');
+                }
+            } catch (err) {
+                showAlert('alert-error', 'Error creating reminder');
+            }
+        });
+
+        // Initialize
+        loadStats();
+        loadReminders();
+        loadLogs();
+        setInterval(loadStats, 30000);
+        setInterval(loadReminders, 30000);
+    </script>
+</body>
+</html>
