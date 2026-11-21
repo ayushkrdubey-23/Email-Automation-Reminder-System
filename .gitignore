@@ -1,0 +1,29 @@
+# Environment variables
+.env
+.env.local
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Outputs and logs (generated at runtime)
+outputs/*.csv
+logs/*.log
+data/*.db
+data/*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
