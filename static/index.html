@@ -3,307 +3,2751 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Automation & Reminder System - Dashboard</title>
+    <title>Email Automation & Reminder System</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* ========== DESIGN SYSTEM ========== */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #f1f5f9;
+            --sidebar-active: #3b82f6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --success-bg: #dcfce7;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --warning: #f59e0b;
+            --warning-bg: #fef3c7;
+            --purple: #8b5cf6;
+            --purple-bg: #f3e8ff;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.2s ease;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header { background: #2563eb; color: white; padding: 1rem 0; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        header h1 { font-size: 1.5rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 2rem; }
-        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .card h3 { color: #2563eb; margin-bottom: 1rem; font-size: 1.1rem; }
-        .stat { font-size: 2rem; font-weight: bold; color: #1f2937; }
-        .stat-label { color: #6b7280; font-size: 0.9rem; }
-        .section { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        .section h2 { color: #1f2937; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 2px solid #2563eb; padding-bottom: 0.5rem; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
-        th { background: #f9fafb; color: #374151; font-weight: 600; }
-        tr:hover { background: #f9fafb; }
-        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
-        .badge-sent { background: #dcfce7; color: #166534; }
-        .badge-failed { background: #fee2e2; color: #991b1b; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
-        .btn { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
-        .btn:hover { background: #1d4ed8; }
-        .btn-secondary { background: #6b7280; margin-left: 0.5rem; }
-        .btn-secondary:hover { background: #4b5563; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; }
-        .form-group input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9rem; }
-        .alert { padding: 1rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
-        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .loading { color: #6b7280; font-style: italic; }
-        .api-url { font-family: monospace; background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 4px; color: #2563eb; }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* ========== LAYOUT ========== */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: var(--transition);
+            box-shadow: 4px 0 6px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .sidebar.collapsed {
+            width: 72px;
+        }
+
+        .sidebar-brand {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar-brand.collapsed .brand-text,
+        .sidebar-brand.collapsed .brand-sub {
+            display: none;
+        }
+
+        .brand-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .brand-text {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .brand-sub {
+            font-size: 0.6875rem;
+            color: #94a3b8;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .sidebar-collapse-btn {
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: var(--radius);
+            display: none;
+        }
+
+        .sidebar-collapse-btn:hover {
+            background-color: #334155;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-nav.collapsed {
+            padding: 12px 0;
+        }
+
+        .nav-section-title {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            padding: 0 16px;
+            font-weight: 600;
+        }
+
+        .nav-section-title.collapsed {
+            display: none;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            margin-bottom: 4px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: none;
+            text-align: left;
+            width: 100%;
+            color: #cbd5e1;
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: #334155;
+            color: #f1f5f9;
+        }
+
+        .nav-item.active {
+            background-color: var(--sidebar-active);
+            color: white;
+        }
+
+        .nav-item.collapsed {
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .nav-item.collapsed .nav-label {
+            display: none;
+        }
+
+        .nav-item .nav-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .nav-item.collapsed .nav-icon {
+            margin: 0 auto;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background-color: #334155;
+            margin: 16px 0;
+        }
+
+        .nav-divider.collapsed {
+            display: none;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+
+        .main-content.collapsed {
+            margin-left: 72px;
+        }
+
+        /* ========== TOP NAV ========== */
+        .top-nav {
+            height: 64px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius);
+        }
+
+        .mobile-menu-btn:hover {
+            background-color: #f1f5f9;
+        }
+
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title .page-icon {
+            color: var(--primary);
+            width: 20px;
+            height: 20px;
+        }
+
+        .top-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .scheduler-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #bfdbfe;
+        }
+
+        .scheduler-status.stopped {
+            background: #fef2f2;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.stopped {
+            background: var(--danger);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .notifications-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius);
+            position: relative;
+        }
+
+        .notifications-btn:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            font-size: 10px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px;
+            background: #f1f5f9;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .user-profile:hover {
+            background: #e2e8f0;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: none;
+        }
+
+        .user-info .user-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .user-info .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ========== PAGE CONTAINER ========== */
+        .page-container {
+            padding: 24px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        /* ========== STAT CARDS ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.total { background: linear-gradient(135deg, var(--primary), #1e40af); }
+        .stat-icon.sent { background: linear-gradient(135deg, var(--success), #047857); }
+        .stat-icon.failed { background: linear-gradient(135deg, var(--danger), #b91c1c); }
+        .stat-icon.pending { background: linear-gradient(135deg, var(--purple), #7c3aed); }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .stat-trend {
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .stat-trend.up { color: var(--success); }
+        .stat-trend.down { color: var(--danger); }
+
+        /* ========== CARDS & SECTIONS ========== */
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .section-icon {
+            color: var(--primary);
+            width: 18px;
+            height: 18px;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .section-body {
+            padding: 20px 24px;
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8125rem;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            justify-content: center;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== TABLES ========== */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* ========== BADGES ========== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-sent { background: var(--success-bg); color: var(--success); }
+        .badge-failed { background: var(--danger-bg); color: var(--danger); }
+        .badge-pending { background: var(--warning-bg); color: #92400e; }
+        .badge-draft { background: #f1f5f9; color: var(--text-muted); }
+        .badge-scheduled { background: var(--purple-bg); color: var(--purple); }
+
+        /* ========== FORMS ========== */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            color: var(--text-main);
+            background: white;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            color: var(--text-main);
+            background: white;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            color: var(--text-main);
+            background: white;
+            resize: vertical;
+            min-height: 80px;
+            transition: var(--transition);
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        /* ========== CHARTS ========== */
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* ========== ALERTS ========== */
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+
+        .alert-info {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+        }
+
+        .alert-warning {
+            background: var(--warning-bg);
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+        }
+
+        .alert-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        /* ========== EMPTY STATES ========== */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            color: #cbd5e1;
+            margin: 0 auto 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.125rem;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.9375rem;
+        }
+
+        /* ========== LOADING ========== */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(37, 99, 235, 0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                left: -260px;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-container {
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .top-nav {
+                padding: 0 16px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .section-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 220px;
+            }
+        }
+
+        /* ========== OVERLAY ========== */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 950;
+            display: none;
+        }
+
+        .sidebar-overlay.open {
+            display: block;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: var(--radius);
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ========== BREADCRUMBS ========== */
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .breadcrumbs a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumbs .separator {
+            color: #94a3b8;
+        }
+
+        /* ========== UTILITIES ========== */
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+        .text-muted { color: var(--text-muted); }
+        .text-primary { color: var(--primary); }
+        .fw-bold { font-weight: 600; }
+        .d-none { display: none !important; }
+        .d-flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .gap-8 { gap: 8px; }
+        .gap-16 { gap: 16px; }
+        .mt-8 { margin-top: 8px; }
+        .mt-16 { margin-top: 16px; }
+        .mb-16 { margin-bottom: 16px; }
+
+        .select-none { user-select: none; }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Email Automation & Reminder System</h1>
-            <p>Dashboard &bull; FastAPI Backend &bull; <span class="api-url">http://localhost:8000/api/</span></p>
+    <div class="app">
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-content">
+                    <div class="brand-icon">
+                        <i data-lucide="mail"></i>
+                    </div>
+                    <div>
+                        <span class="brand-text">Email Automation</span>
+                        <span class="brand-sub">Reminder System</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar">
+                    <i data-lucide="chevron-left" width="16" height="16"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+                    <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                    <span class="nav-label">Dashboard</span>
+                </button>
+                <button class="nav-item" id="nav-campaigns" onclick="navigate('campaigns')">
+                    <i data-lucide="send" class="nav-icon"></i>
+                    <span class="nav-label">Campaigns</span>
+                </button>
+                <button class="nav-item" id="nav-reminders" onclick="navigate('reminders')">
+                    <i data-lucide="clock" class="nav-icon"></i>
+                    <span class="nav-label">Reminders</span>
+                </button>
+                <button class="nav-item" id="nav-contacts" onclick="navigate('contacts')">
+                    <i data-lucide="users" class="nav-icon"></i>
+                    <span class="nav-label">Contacts</span>
+                </button>
+                <button class="nav-item" id="nav-reports" onclick="navigate('reports')">
+                    <i data-lucide="bar-chart-3" class="nav-icon"></i>
+                    <span class="nav-label">Reports</span>
+                </button>
+                <button class="nav-item" id="nav-settings" onclick="navigate('settings')">
+                    <i data-lucide="settings" class="nav-icon"></i>
+                    <span class="nav-label">Settings</span>
+                </button>
+
+                <div class="nav-divider"></div>
+                <div class="nav-section-title">System</div>
+                <button class="nav-item" onclick="viewLogs()">
+                    <i data-lucide="file-text" class="nav-icon"></i>
+                    <span class="nav-label">System Logs</span>
+                </button>
+            </div>
+
+            <div style="padding: 16px; border-top: 1px solid #334155; margin-top: auto;">
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 8px;">
+                    v1.0.0 &bull; Python Project
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b;">
+                    Python Automation System
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Navigation -->
+            <header class="top-nav">
+                <div class="top-nav-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()" id="mobileMenuBtn">
+                        <i data-lucide="menu" width="20" height="20"></i>
+                    </button>
+                    <div class="page-title">
+                        <i data-lucide="layout-dashboard" class="page-icon"></i>
+                        <span id="pageTitle">Dashboard</span>
+                    </div>
+                </div>
+                <div class="top-nav-right">
+                    <div class="scheduler-status" id="schedulerStatus">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="statusText">Scheduler: Stopped</span>
+                    </div>
+                    <button class="notifications-btn" title="Notifications">
+                        <i data-lucide="bell" width="20" height="20"></i>
+                        <div class="notification-badge" id="notificationBadge"></div>
+                    </button>
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <div class="user-avatar">AD</div>
+                        <div class="user-info">
+                            <div class="user-name">Admin User</div>
+                            <div class="user-role">System Administrator</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Container -->
+            <div class="page-container">
+                <div class="breadcrumbs" id="breadcrumbs">
+                    <a href="#" onclick="navigate('dashboard')">Home</a>
+                    <span class="separator">/</span>
+                    <span id="breadcrumbCurrent">Dashboard</span>
+                </div>
+
+                <!-- Alerts Container -->
+                <div id="alertsContainer"></div>
+
+                <!-- ========== DASHBOARD PAGE ========== -->
+                <div id="page-dashboard" class="page-section">
+                    <div class="page-header">
+                        <h1>Dashboard</h1>
+                        <p>Overview of your email automation system</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon total">
+                                <i data-lucide="mail" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Emails</div>
+                                <div class="stat-value" id="stat-total">0</div>
+                                <div class="stat-trend up" id="stat-total-trend">—</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon sent">
+                                <i data-lucide="check-circle-2" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Successfully Sent</div>
+                                <div class="stat-value" id="stat-sent">0</div>
+                                <div class="stat-trend up" id="stat-sent-trend">—</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon failed">
+                                <i data-lucide="x-circle" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Failed Emails</div>
+                                <div class="stat-value" id="stat-failed">0</div>
+                                <div class="stat-trend down" id="stat-failed-trend">—</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon pending">
+                                <i data-lucide="clock" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Scheduled Jobs</div>
+                                <div class="stat-value" id="stat-pending">0</div>
+                                <div class="stat-trend up" id="stat-pending-trend">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                        <!-- Campaign Performance Chart -->
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="trending-up" class="section-icon"></i>
+                                    Email Campaign Performance
+                                </div>
+                                <div class="section-actions">
+                                    <select class="form-select btn-sm" style="padding: 6px 10px; font-size: 0.8rem;">
+                                        <option>Last 7 days</option>
+                                        <option>Last 30 days</option>
+                                        <option>Last 90 days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div class="chart-container">
+                                    <canvas id="performanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scheduler Status -->
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="activity" class="section-icon"></i>
+                                    Scheduler Status
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                                    <div class="status-dot" id="dashboardStatusDot"></div>
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--text-main);">Scheduler Status</div>
+                                        <div style="font-size: 0.8125rem; color: var(--text-muted);" id="dashboardSchedulerText">Stopped</div>
+                                    </div>
+                                </div>
+                                <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.875rem;">
+                                        <span style="color: var(--text-muted);">Last Execution</span>
+                                        <span id="lastExecTime" style="font-weight: 500;">—</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.875rem;">
+                                        <span style="color: var(--text-muted);">Next Scheduled Job</span>
+                                        <span id="nextJobTime" style="font-weight: 500;">—</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                                        <span style="color: var(--text-muted);">Mode</span>
+                                        <span id="schedulerMode" style="font-weight: 500;">Dry Run</span>
+                                    </div>
+                                </div>
+                                <div class="mt-16" style="display: flex; gap: 8px;">
+                                    <button class="btn btn-primary btn-sm" onclick="runAutomation()">
+                                        <i data-lucide="play" width="16" height="16"></i>
+                                        Run Automation
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="viewLogs()">
+                                        <i data-lucide="file-text" width="16" height="16"></i>
+                                        Logs
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <i data-lucide="clock" class="section-icon"></i>
+                                Recent Activity
+                            </div>
+                            <div class="section-actions">
+                                <button class="btn btn-secondary btn-sm" onclick="loadActivity()">Refresh</button>
+                            </div>
+                        </div>
+                        <div class="section-body" style="padding: 0;">
+                            <div class="table-responsive">
+                                <table id="activityTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 20%;">Time</th>
+                                            <th style="width: 25%;">Action</th>
+                                            <th style="width: 25%;">Details</th>
+                                            <th style="width: 15%;">Status</th>
+                                            <th style="width: 15%;">Recipient</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="activityTableBody">
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                                <i data-lucide="loader" width="24" height="24" style="animation: spin 1s linear infinite;"></i>
+                                                <div style="margin-top: 8px;">Loading activity...</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Your Campaigns -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <i data-lucide="send" class="section-icon"></i>
+                                Your Campaigns
+                            </div>
+                            <div class="section-actions">
+                                <button class="btn btn-primary btn-sm" onclick="openCampaignModal()">
+                                    <i data-lucide="plus" width="14" height="14"></i>
+                                    New Campaign
+                                </button>
+                            </div>
+                        </div>
+                        <div class="section-body" style="padding: 0;">
+                            <div class="table-responsive">
+                                <table id="campaignsTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 22%;">Campaign Name</th>
+                                            <th style="width: 18%;">Recipients</th>
+                                            <th style="width: 15%;">Status</th>
+                                            <th style="width: 20%;">Scheduled Date</th>
+                                            <th style="width: 25%;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="campaignsTableBody">
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                                <i data-lucide="inbox" width="24" height="24"></i>
+                                                <div style="margin-top: 8px;">No campaigns yet</div>
+                                                <div style="margin-top: 4px; font-size: 0.875rem;">Create your first campaign to get started</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== CAMPAIGNS PAGE ========== -->
+                <div id="page-campaigns" class="page-section d-none">
+                    <div class="page-header">
+                        <h1>Campaigns</h1>
+                        <p>Manage your email campaigns</p>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                        <div class="section-actions">
+                            <input type="text" id="campaignSearch" class="form-input" style="width: 280px; max-width: 100%;" placeholder="Search campaigns..." onkeyup="filterCampaigns()">
+                            <select id="campaignStatusFilter" class="form-select" style="max-width: 180px;" onchange="filterCampaigns()">
+                                <option value="">All Statuses</option>
+                                <option value="draft">Draft</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="openCampaignModal()">
+                            <i data-lucide="plus" width="18" height="18"></i>
+                            Create Campaign
+                        </button>
+                    </div>
+
+                    <div class="section-card">
+                        <div class="section-body" style="padding: 0;">
+                            <div class="table-responsive">
+                                <table id="campaignsListTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 26%;">Campaign Name</th>
+                                            <th style="width: 14%;">Recipients</th>
+                                            <th style="width: 14%;">Sent</th>
+                                            <th style="width: 14%;">Failed</th>
+                                            <th style="width: 12%;">Status</th>
+                                            <th style="width: 16%;">Created</th>
+                                            <th style="width: 14%;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="campaignsListBody">
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                                <i data-lucide="loader" width="24" height="24" style="animation: spin 1s linear infinite;"></i>
+                                                <div style="margin-top: 8px;">Loading campaigns...</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== REMINDERS PAGE ========== -->
+                <div id="page-reminders" class="page-section d-none">
+                    <div class="page-header">
+                        <h1>Reminders</h1>
+                        <p>Manage personal and team reminders</p>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                        <div class="section-actions">
+                            <select id="reminderStatusFilter" class="form-select" style="max-width: 180px;" onchange="filterReminders()">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="sent">Sent</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="openReminderModal()">
+                            <i data-lucide="plus" width="18" height="18"></i>
+                            New Reminder
+                        </button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="list" class="section-icon"></i>
+                                    All Reminders
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 0;">
+                                <div class="table-responsive">
+                                    <table id="remindersListTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 16%;">Reminder ID</th>
+                                                <th style="width: 20%;">Contact Email</th>
+                                                <th style="width: 20%;">Subject</th>
+                                                <th style="width: 18%;">Schedule Time</th>
+                                                <th style="width: 12%;">Status</th>
+                                                <th style="width: 14%;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="remindersListBody">
+                                            <tr>
+                                                <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                                    <i data-lucide="loader" width="24" height="24" style="animation: spin 1s linear infinite;"></i>
+                                                    <div style="margin-top: 8px;">Loading reminders...</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="clock" class="section-icon"></i>
+                                    Due Reminders
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 0;">
+                                <div class="table-responsive">
+                                    <table id="dueRemindersTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 20%;">Reminder ID</th>
+                                                <th style="width: 20%;">Subject</th>
+                                                <th style="width: 20%;">Schedule Time</th>
+                                                <th style="width: 12%;">Status</th>
+                                                <th style="width: 28%;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dueRemindersBody">
+                                            <tr>
+                                                <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                                    <i data-lucide="loader" width="24" height="24" style="animation: spin 1s linear infinite;"></i>
+                                                    <div style="margin-top: 8px;">Loading due reminders...</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid var(--border);">
+                                    <button class="btn btn-primary btn-sm" style="width: 100%;" onclick="sendDueRemindersFromPage()">
+                                        <i data-lucide="send" width="16" height="16"></i>
+                                        Send All Due Reminders
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Create Reminder Form (inline) -->
+                    <div class="section-card" style="margin-top: 24px;">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <i data-lucide="plus-circle" class="section-icon"></i>
+                                Create New Reminder
+                            </div>
+                        </div>
+                        <div class="section-body" style="padding: 24px;">
+                            <form id="createReminderForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Reminder ID</label>
+                                        <input type="text" class="form-input" id="newReminderId" required placeholder="e.g. REM-001">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Contact Email</label>
+                                        <input type="email" class="form-input" id="newContactEmail" required placeholder="john@example.com">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Subject</label>
+                                    <input type="text" class="form-input" id="newReminderSubject" required placeholder="Meeting Reminder">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Schedule Time</label>
+                                    <input type="text" class="form-input" id="newReminderSchedule" required placeholder="2026-12-01 09:00:00">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Message</label>
+                                    <textarea class="form-textarea" id="newReminderMessage" required placeholder="Your reminder message..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="send" width="16" height="16"></i>
+                                    Create Reminder
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== CONTACTS PAGE ========== -->
+                <div id="page-contacts" class="page-section d-none">
+                    <div class="page-header">
+                        <h1>Contacts</h1>
+                        <p>Manage your contact list</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="search" class="section-icon"></i>
+                                    Search & Filter Contacts
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div class="form-group">
+                                    <label class="form-label">Search contacts</label>
+                                    <input type="text" class="form-input" id="contactSearch" placeholder="Search by name or email..." onkeyup="filterContacts()">
+                                </div>
+                                <div class="mt-16">
+                                    <button class="btn btn-outline btn-sm" onclick="filterContacts('')">Clear Filter</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="upload" class="section-icon"></i>
+                                    Import Contacts
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div style="text-align: center; padding: 32px 24px; background: #f8fafc; border: 2px dashed var(--border); border-radius: var(--radius);">
+                                    <i data-lucide="file-up" width="32" height="32" style="color: var(--text-muted); margin-bottom: 12px;"></i>
+                                    <div style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">Upload CSV File</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-muted);">CSV with columns: name, email, role, company, department</div>
+                                </div>
+                                <div class="mt-16">
+                                    <input type="file" id="contactsFileInput" accept=".csv" style="display: none;">
+                                    <button class="btn btn-primary btn-sm" onclick="document.getElementById('contactsFileInput').click()" style="width: 100%;">
+                                        <i data-lucide="upload" width="16" height="16"></i>
+                                        Choose File
+                                    </button>
+                                </div>
+                                <div class="mt-8">
+                                    <button class="btn btn-secondary btn-sm" onclick="uploadContactsCSV()" style="width: 100%;">
+                                        <i data-lucide="check-circle" width="16" height="16"></i>
+                                        Upload & Import
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <i data-lucide="users" class="section-icon"></i>
+                                Contact List
+                            </div>
+                        </div>
+                        <div class="section-body" style="padding: 0;">
+                            <div class="table-responsive">
+                                <table id="contactsTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 24%;">Name</th>
+                                            <th style="width: 24%;">Email</th>
+                                            <th style="width: 18%;">Role</th>
+                                            <th style="width: 16%;">Company</th>
+                                            <th style="width: 18%;">Department</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="contactsTableBody">
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                                <i data-lucide="loader" width="24" height="24" style="animation: spin 1s linear infinite;"></i>
+                                                <div style="margin-top: 8px;">Loading contacts...</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius);">
+                        <div>
+                            <div style="font-size: 0.875rem; color: var(--text-main); font-weight: 600;" id="contactTotal">0</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Total Contacts</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.875rem; color: #dc2626; font-weight: 600;" id="contactInvalid">0</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Invalid Emails</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== REPORTS PAGE ========== -->
+                <div id="page-reports" class="page-section d-none">
+                    <div class="page-header">
+                        <h1>Reports</h1>
+                        <p>View and download email reports</p>
+                    </div>
+
+                    <div class="stats-grid" style="margin-bottom: 24px;">
+                        <div class="stat-card">
+                            <div class="stat-icon total">
+                                <i data-lucide="file-text" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Reports</div>
+                                <div class="stat-value" id="reportTotal">0</div>
+                                <div class="stat-trend up" id="reportTotalTrend">—</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon sent">
+                                <i data-lucide="check-circle-2" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Sent</div>
+                                <div class="stat-value" id="reportSent">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon failed">
+                                <i data-lucide="x-circle" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Failed</div>
+                                <div class="stat-value" id="reportFailed">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon pending">
+                                <i data-lucide="trending-up" width="24" height="24"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Success Rate</div>
+                                <div class="stat-value" id="reportSuccessRate">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="clock" class="section-icon"></i>
+                                    Recent Reports
+                                </div>
+                                <div class="section-actions">
+                                    <button class="btn btn-primary btn-sm" onclick="runAutomation()">
+                                        <i data-lucide="play" width="16" height="16"></i>
+                                        Generate Report
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 0;">
+                                <div class="table-responsive">
+                                    <table id="reportsTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 24%;">Report Name</th>
+                                                <th style="width: 20%;">Generated At</th>
+                                                <th style="width: 16%;">Total</th>
+                                                <th style="width: 16%;">Sent</th>
+                                                <th style="width: 12%;">Failed</th>
+                                                <th style="width: 12%;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="reportsTableBody">
+                                            <tr>
+                                                <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                                    <i data-lucide="loader" width="24" height="24" style="animation: spin 1s linear infinite;"></i>
+                                                    <div style="margin-top: 8px;">Loading reports...</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="download" class="section-icon"></i>
+                                    Quick Downloads
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <button class="btn btn-outline btn-sm" style="width: 100%; text-align: left;" onclick="downloadReport('sent')">
+                                        <i data-lucide="check-circle-2" width="16" height="16" style="color: var(--success);"></i>
+                                        Sent Emails CSV
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" style="width: 100%; text-align: left;" onclick="downloadReport('failed')">
+                                        <i data-lucide="x-circle" width="16" height="16" style="color: var(--danger);"></i>
+                                        Failed Emails CSV
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" style="width: 100%; text-align: left;" onclick="downloadReport('summary')">
+                                        <i data-lucide="file-text" width="16" height="16"></i>
+                                        Summary Report CSV
+                                    </button>
+                                </div>
+                                <div class="mt-16" style="padding: 16px; background: #f8fafc; border-radius: var(--radius); border: 1px solid var(--border);">
+                                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 8px;">Note:</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-main);">Report files are generated by running the automation workflow. Files appear in the outputs/ directory.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== SETTINGS PAGE ========== -->
+                <div id="page-settings" class="page-section d-none">
+                    <div class="page-header">
+                        <h1>Settings</h1>
+                        <p>Configure your email automation system</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="mail" class="section-icon"></i>
+                                    SMTP Configuration
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div class="form-group">
+                                    <label class="form-label">SMTP Server</label>
+                                    <input type="text" class="form-input" id="settingSmtpServer" value="smtp.gmail.com" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">SMTP Port</label>
+                                    <input type="text" class="form-input" id="settingSmtpPort" value="587" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sender Email</label>
+                                    <input type="email" class="form-input" id="settingSenderEmail" value="your-email@gmail.com" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">App Password</label>
+                                    <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; color: var(--text-muted); font-size: 0.875rem;">
+                                        Not displayed for security. Configure in .env file.
+                                    </div>
+                                </div>
+                                <div class="form-group mt-16">
+                                    <label class="form-label">Dry Run Mode</label>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="settingDryRun" checked style="accent-color: var(--primary);">
+                                        <label style="margin: 0; cursor: pointer;">Simulate sending without actual emails (recommended for testing)</label>
+                                    </div>
+                                </div>
+                                <div class="mt-16" style="display: flex; gap: 8px;">
+                                    <button class="btn btn-primary btn-sm" onclick="testSmtpConnection()">
+                                        <i data-lucide="send" width="16" height="16"></i>
+                                        Test Connection
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="saveSettings()">
+                                        <i data-lucide="save" width="16" height="16"></i>
+                                        Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="shield-check" class="section-icon"></i>
+                                    Security & Preferences
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div class="form-group">
+                                    <label class="form-label">Auto-run Scheduler</label>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="settingAutoRun" style="accent-color: var(--primary);">
+                                        <label style="margin: 0; cursor: pointer;">Automatically send due reminders</label>
+                                    </div>
+                                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 4px;">Requires backend scheduler implementation</div>
+                                </div>
+                                <div class="form-group mt-16">
+                                    <label class="form-label">Notification Preferences</label>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <label style="display: flex; align-items: start; gap: 8px; cursor: pointer;">
+                                            <input type="checkbox" checked style="accent-color: var(--primary); margin-top: 2px;">
+                                            <span>Email notifications for failed sends</span>
+                                        </label>
+                                        <label style="display: flex; align-items: start; gap: 8px; cursor: pointer;">
+                                            <input type="checkbox" style="accent-color: var(--primary); margin-top: 2px;">
+                                            <span>Daily summary report</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group mt-16">
+                                    <label class="form-label">Data Management</label>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <button class="btn btn-outline btn-sm" style="width: 100%; text-align: left;">
+                                            <i data-lucide="download" width="14" height="14"></i>
+                                            Export All Data
+                                        </button>
+                                        <button class="btn btn-outline btn-sm" style="width: 100%; text-align: left; color: var(--danger);">
+                                            <i data-lucide="trash-2" width="14" height="14"></i>
+                                            Clear All Logs
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-16">
+                                    <button class="btn btn-secondary btn-sm" onclick="saveSettings()">
+                                        <i data-lucide="save" width="16" height="16"></i>
+                                        Save Preferences
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card" style="grid-column: 1 / -1;">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i data-lucide="info" class="section-icon"></i>
+                                    System Information
+                                </div>
+                            </div>
+                            <div class="section-body" style="padding: 24px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                                    <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Application</div>
+                                        <div style="font-weight: 600; color: var(--text-main);">Email Automation & Reminder System</div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Version</div>
+                                        <div style="font-weight: 600; color: var(--text-main);">v1.0.0</div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Backend</div>
+                                        <div style="font-weight: 600; color: var(--text-main);">Python FastAPI</div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Database</div>
+                                        <div style="font-weight: 600; color: var(--text-main);">SQLite</div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Frontend</div>
+                                        <div style="font-weight: 600; color: var(--text-main);">HTML5 + CSS3 + JS</div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">API Base URL</div>
+                                        <div style="font-weight: 600; color: var(--text-main); font-size: 0.8125rem; word-break: break-all;">http://localhost:8000/api</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Campaign Modal -->
+    <div class="modal-overlay" id="campaignModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i data-lucide="plus" width="18" height="18"></i>
+                    Create New Campaign
+                </div>
+                <button class="modal-close" onclick="closeCampaignModal()">
+                    <i data-lucide="x" width="20" height="20"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createCampaignForm">
+                    <div class="form-group">
+                        <label class="form-label">Campaign Name</label>
+                        <input type="text" class="form-input" id="campaignName" required placeholder="e.g. Q1 Newsletter">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" id="campaignDescription" rows="3" placeholder="Campaign description..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Template</label>
+                        <select class="form-select" id="campaignTemplate">
+                            <option value="reminder.txt">Default Reminder Template</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Schedule Date</label>
+                            <input type="date" class="form-input" id="campaignDate">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Schedule Time</label>
+                            <input type="time" class="form-input" id="campaignTime">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="campaignRecurring" style="accent-color: var(--primary); margin: 0;">
+                            Recurring Campaign
+                        </label>
+                    </div>
+                    <div id="campaignRecurringOptions" style="display: none; margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: var(--radius); border: 1px solid var(--border);">
+                        <div class="form-group">
+                            <label class="form-label">Recurrence Frequency</label>
+                            <select class="form-select" id="campaignFrequency">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-16" style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeCampaignModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i data-lucide="send" width="16" height="16"></i>
+                            Create Campaign
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </header>
+    </div>
 
-    <div class="container">
-        <div id="alert-success" class="alert alert-success"></div>
-        <div id="alert-error" class="alert alert-error"></div>
-
-        <div class="grid">
-            <div class="card">
-                <h3>Total Reminders</h3>
-                <div class="stat" id="stat-total">-</div>
-                <div class="stat-label">All reminders in system</div>
-            </div>
-            <div class="card">
-                <h3>Sent</h3>
-                <div class="stat" id="stat-sent">-</div>
-                <div class="stat-label">Successfully delivered</div>
-            </div>
-            <div class="card">
-                <h3>Failed</h3>
-                <div class="stat" id="stat-failed">-</div>
-                <div class="stat-label">Failed deliveries</div>
-            </div>
-            <div class="card">
-                <h3>Pending</h3>
-                <div class="stat" id="stat-pending">-</div>
-                <div class="stat-label">Waiting to be sent</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Reminders</h2>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <button class="btn" onclick="loadReminders()">Refresh</button>
-                <button class="btn btn-secondary" onclick="sendDueReminders()">Send Due Reminders</button>
-            </div>
-            <table id="reminders-table">
-                <thead>
-                    <tr>
-                        <th>Reminder ID</th>
-                        <th>Contact Email</th>
-                        <th>Subject</th>
-                        <th>Schedule Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="6" class="loading">Loading reminders...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>Create New Reminder</h2>
-            <form id="create-reminder-form">
-                <div class="form-group">
-                    <label>Reminder ID</label>
-                    <input type="text" id="reminder-id" required placeholder="e.g. REM-001">
+    <!-- Reminder Modal -->
+    <div class="modal-overlay" id="reminderModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i data-lucide="clock-plus" width="18" height="18"></i>
+                    New Reminder
                 </div>
-                <div class="form-group">
-                    <label>Contact Email</label>
-                    <input type="email" id="contact-email" required placeholder="john@example.com">
-                </div>
-                <div class="form-group">
-                    <label>Subject</label>
-                    <input type="text" id="subject" required placeholder="Meeting Reminder">
-                </div>
-                <div class="form-group">
-                    <label>Schedule Time (YYYY-MM-DD HH:MM:SS)</label>
-                    <input type="text" id="schedule-time" required placeholder="2026-12-01 09:00:00">
-                </div>
-                <div class="form-group">
-                    <label>Message</label>
-                    <input type="text" id="message" required placeholder="Don't forget the meeting!">
-                </div>
-                <button type="submit" class="btn">Create Reminder</button>
-            </form>
-        </div>
-
-        <div class="section">
-            <h2>Recent Email Logs</h2>
-            <table id="logs-table">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Recipient</th>
-                        <th>Subject</th>
-                        <th>Status</th>
-                        <th>Message</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="5" class="loading">Loading logs...</td></tr>
-                </tbody>
-            </table>
+                <button class="modal-close" onclick="closeReminderModal()">
+                    <i data-lucide="x" width="20" height="20"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createReminderModalForm">
+                    <div class="form-group">
+                        <label class="form-label">Reminder ID</label>
+                        <input type="text" class="form-input" id="modalReminderId" required placeholder="e.g. REM-001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Email</label>
+                        <input type="email" class="form-input" id="modalContactEmail" required placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-input" id="modalReminderSubject" required placeholder="Meeting Reminder">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Schedule Time</label>
+                        <input type="text" class="form-input" id="modalReminderSchedule" required placeholder="2026-12-01 09:00:00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-textarea" id="modalReminderMessage" required placeholder="Your reminder message..."></textarea>
+                    </div>
+                    <div class="mt-16" style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeReminderModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i data-lucide="send" width="16" height="16"></i>
+                            Create Reminder
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
+        // ========== CONFIGURATION ==========
         const API_BASE = 'http://localhost:8000/api';
+        let currentPage = 'dashboard';
+        let performanceChart = null;
 
-        function showAlert(elementId, message) {
-            const el = document.getElementById(elementId);
-            el.textContent = message;
-            el.style.display = 'block';
-            setTimeout(() => { el.style.display = 'none'; }, 5000);
-        }
+        // ========== NAVIGATION ==========
+        function navigate(page) {
+            currentPage = page;
 
-        async function loadStats() {
-            try {
-                const res = await fetch(`${API_BASE}/stats`);
-                const data = await res.json();
-                updateStat('stat-total', data.total_reminders);
-                updateStat('stat-sent', data.sent);
-                updateStat('stat-failed', data.failed);
-                updateStat('stat-pending', data.pending);
-            } catch (e) {
-                console.error('Failed to load stats', e);
-            }
-        }
+            // Update sidebar
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            const activeNav = document.getElementById('nav-' + page);
+            if (activeNav) activeNav.classList.add('active');
 
-        function updateStat(elementId, newValue) {
-            const el = document.getElementById(elementId);
-            const oldValue = el.textContent;
-            if (oldValue !== String(newValue)) {
-                el.style.transform = 'scale(1.2)';
-                el.style.color = '#2563eb';
-                setTimeout(() => {
-                    el.textContent = newValue;
-                    el.style.transform = 'scale(1)';
-                    el.style.color = '#1f2937';
-                }, 200);
-            }
-        }
+            // Hide all pages
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.add('d-none');
+            });
 
-        async function loadReminders() {
-            try {
-                const res = await fetch(`${API_BASE}/reminders`);
-                const data = await res.json();
-                const tbody = document.querySelector('#reminders-table tbody');
-                tbody.innerHTML = '';
-                data.forEach(r => {
-                    const badgeClass = r.status === 'sent' ? 'badge-sent' : r.status === 'failed' ? 'badge-failed' : 'badge-pending';
-                    const row = `
-                        <tr>
-                            <td>${r.reminder_id}</td>
-                            <td>${r.contact_email}</td>
-                            <td>${r.subject}</td>
-                            <td>${r.schedule_time}</td>
-                            <td><span class="badge ${badgeClass}">${r.status}</span></td>
-                            <td>
-                                ${r.status === 'pending' ? `<button class="btn" style="padding:0.25rem 0.5rem;font-size:0.8rem;" onclick="sendReminder('${r.reminder_id}')">Send</button>` : ''}
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            } catch (e) {
-                console.error('Failed to load reminders', e);
-                document.querySelector('#reminders-table tbody').innerHTML = '<tr><td colspan="6">Error loading reminders</td></tr>';
-            }
-        }
+            // Show current page
+            document.getElementById('page-' + page).classList.remove('d-none');
 
-        async function sendReminder(reminderId) {
-            try {
-                const res = await fetch(`${API_BASE}/reminders/${reminderId}/send`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    showAlert('alert-success', `Reminder ${reminderId} sent successfully!`);
-                } else {
-                    showAlert('alert-error', `Failed: ${data.message}`);
-                }
-                // Small delay to ensure DB is updated, then refresh stats and reminders
-                setTimeout(() => {
-                    loadStats();
-                    loadReminders();
-                }, 500);
-            } catch (e) {
-                showAlert('alert-error', 'Error sending reminder');
-            }
-        }
-
-        async function sendDueReminders() {
-            try {
-                const res = await fetch(`${API_BASE}/send-due`, { method: 'POST' });
-                const data = await res.json();
-                showAlert('alert-success', data.message);
-                // Background task needs time to process, delay stats refresh
-                setTimeout(() => {
-                    loadStats();
-                    loadReminders();
-                    loadLogs();
-                }, 1500);
-            } catch (e) {
-                showAlert('alert-error', 'Error sending due reminders');
-            }
-        }
-
-        async function loadLogs() {
-            try {
-                const res = await fetch(`${API_BASE}/logs?limit=20`);
-                const data = await res.json();
-                const tbody = document.querySelector('#logs-table tbody');
-                tbody.innerHTML = '';
-                data.forEach(l => {
-                    const badgeClass = l.status === 'sent' ? 'badge-sent' : 'badge-failed';
-                    const row = `
-                        <tr>
-                            <td>${l.timestamp}</td>
-                            <td>${l.recipient}</td>
-                            <td>${l.subject}</td>
-                            <td><span class="badge ${badgeClass}">${l.status}</span></td>
-                            <td>${l.message || '-'}</td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            } catch (e) {
-                console.error('Failed to load logs', e);
-            }
-        }
-
-        document.getElementById('create-reminder-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const reminder = {
-                reminder_id: document.getElementById('reminder-id').value,
-                contact_email: document.getElementById('contact-email').value,
-                subject: document.getElementById('subject').value,
-                schedule_time: document.getElementById('schedule-time').value,
-                message: document.getElementById('message').value,
+            // Update title and breadcrumbs
+            const titles = {
+                'dashboard': 'Dashboard',
+                'campaigns': 'Campaigns',
+                'reminders': 'Reminders',
+                'contacts': 'Contacts',
+                'reports': 'Reports',
+                'settings': 'Settings'
             };
+            document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+            document.getElementById('breadcrumbCurrent').textContent = titles[page] || 'Dashboard';
+
+            // Close mobile sidebar
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('open');
+
+            // Initialize page-specific data
+            setTimeout(() => {
+                initLucideIcons();
+                if (page === 'dashboard') loadDashboardData();
+                if (page === 'campaigns') loadCampaigns();
+                if (page === 'reminders') loadRemindersData();
+                if (page === 'contacts') loadContactsData();
+                if (page === 'reports') loadReportsData();
+                if (page === 'settings') loadSettingsData();
+            }, 100);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        function toggleUserMenu() {
+            // Placeholder for user menu
+            showAlert('info', 'User menu - authentication not implemented in this version');
+        }
+
+        // ========== ALERTS ==========
+        function showAlert(type, message) {
+            const container = document.getElementById('alertsContainer');
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-' + type;
+            alert.innerHTML = `
+                <div class="alert-icon">
+                    <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info'}" width="18" height="18"></i>
+                </div>
+                <div>${escapeHtml(message)}</div>
+                <button class="alert-close" onclick="this.parentElement.parentElement.remove()">
+                    <i data-lucide="x" width="16" height="16"></i>
+                </button>
+            `;
+            container.appendChild(alert);
+            initLucideIcons();
+
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== LUCIDE ICONS ==========
+        function initLucideIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // ========== API HELPERS ==========
+        async function apiRequest(endpoint, options = {}) {
+            const url = API_BASE + endpoint;
+            const defaultOptions = {
+                headers: { 'Content-Type': 'application/json' },
+            };
+            const config = { ...defaultOptions, ...options };
             try {
-                const res = await fetch(`${API_BASE}/reminders`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(reminder),
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    showAlert('alert-success', 'Reminder created successfully!');
-                    document.getElementById('create-reminder-form').reset();
-                    setTimeout(() => {
-                        loadReminders();
-                        loadStats();
-                    }, 500);
-                } else {
-                    showAlert('alert-error', data.detail || 'Failed to create reminder');
+                const response = await fetch(url, config);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || 'Request failed');
                 }
-            } catch (err) {
-                showAlert('alert-error', 'Error creating reminder');
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // ========== DASHBOARD DATA ==========
+        async function loadDashboardData() {
+            try {
+                const [stats, reminders, campaigns, logs] = await Promise.all([
+                    apiRequest('/stats'),
+                    apiRequest('/reminders'),
+                    apiRequest('/campaigns'),
+                    apiRequest('/logs?limit=10')
+                ]);
+
+                // Update stat cards
+                document.getElementById('stat-total').textContent = stats.total_reminders;
+                document.getElementById('stat-sent').textContent = stats.sent;
+                document.getElementById('stat-failed').textContent = stats.failed;
+                document.getElementById('stat-pending').textContent = stats.pending;
+
+                // Calculate success rate
+                const total = stats.total_reminders || 0;
+                const sent = stats.sent || 0;
+                const successRate = total > 0 ? ((sent / total) * 100).toFixed(1) : '0';
+                document.getElementById('stat-total-trend').textContent = successRate + '% success rate';
+                document.getElementById('stat-total-trend').className = 'stat-trend ' + (total > 0 ? 'up' : '');
+
+                // Update scheduler status
+                updateSchedulerStatus();
+
+                // Load recent activity
+                loadActivity();
+
+                // Load campaigns table
+                renderCampaignsTable(campaigns);
+
+                // Initialize chart
+                initPerformanceChart(stats);
+
+            } catch (error) {
+                showAlert('error', 'Failed to load dashboard data: ' + error.message);
+            }
+        }
+
+        function updateSchedulerStatus() {
+            const statusEl = document.getElementById('schedulerStatus');
+            const dotEl = document.getElementById('statusDot');
+            const textEl = document.getElementById('statusText');
+            const dashboardDot = document.getElementById('dashboardStatusDot');
+            const dashboardText = document.getElementById('dashboardSchedulerText');
+
+            // In dry-run mode, scheduler is effectively "stopped" for actual sending
+            const isRunning = false; // Backend doesn't expose scheduler status yet
+            if (isRunning) {
+                statusEl.classList.remove('stopped');
+                dotEl.classList.remove('stopped');
+                textEl.textContent = 'Scheduler: Running';
+                if (dashboardDot) dashboardDot.classList.remove('stopped');
+                if (dashboardText) dashboardText.textContent = 'Running';
+            } else {
+                statusEl.classList.add('stopped');
+                dotEl.classList.add('stopped');
+                textEl.textContent = 'Scheduler: Stopped';
+                if (dashboardDot) dashboardDot.classList.add('stopped');
+                if (dashboardText) dashboardText.textContent = 'Stopped';
+            }
+        }
+
+        async function initPerformanceChart(stats) {
+            const ctx = document.getElementById('performanceChart');
+            if (!ctx) return;
+
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+
+            const total = stats.total_reminders || 0;
+            const sent = stats.sent || 0;
+            const failed = stats.failed || 0;
+            const pending = stats.pending || 0;
+
+            performanceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sent', 'Failed', 'Pending'],
+                    datasets: [{
+                        data: [sent, failed, pending],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { size: 12 },
+                                color: '#64748b'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + ' (' + ((context.parsed / total * 100) || 0).toFixed(1) + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadActivity() {
+            try {
+                const logs = await apiRequest('/logs?limit=10');
+                const tbody = document.getElementById('activityTableBody');
+                tbody.innerHTML = '';
+
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">No recent activity</td></tr>';
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const badgeClass = log.status === 'sent' ? 'badge-sent' : 'badge-failed';
+                    const row = `
+                        <tr>
+                            <td>${escapeHtml(log.timestamp || '—')}</td>
+                            <td>${escapeHtml(log.status === 'sent' ? 'Email Sent' : 'Email Failed')}</td>
+                            <td>${escapeHtml(log.subject || '—')}</td>
+                            <td><span class="badge ${badgeClass}">${log.status}</span></td>
+                            <td>${escapeHtml(log.recipient || '—')}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Failed to load activity', error);
+            }
+        }
+
+        function renderCampaignsTable(campaigns) {
+            const tbody = document.getElementById('campaignsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!campaigns || campaigns.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">No campaigns yet</td></tr>';
+                return;
+            }
+
+            campaigns.forEach(c => {
+                const badgeClass = c.status === 'completed' ? 'badge-sent' : c.status === 'failed' ? 'badge-failed' : c.status === 'draft' ? 'badge-draft' : 'badge-scheduled';
+                const row = `
+                    <tr>
+                        <td>${escapeHtml(c.name || '—')}</td>
+                        <td>${c.sent_count + c.failed_count || 0}</td>
+                        <td><span class="badge ${badgeClass}">${escapeHtml(c.status)}</span></td>
+                        <td>${escapeHtml(c.created_at || '—')}</td>
+                        <td>
+                            <button class="btn btn-outline btn-sm" onclick="viewCampaignDetails(${c.id})" style="padding: 4px 8px;">
+                                <i data-lucide="eye" width="14" height="14"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            initLucideIcons();
+        }
+
+        // ========== AUTOMATION ==========
+        async function runAutomation() {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader" width="16" height="16" style="animation: spin 1s linear infinite;"></i> Running...';
+            btn.disabled = true;
+            initLucideIcons();
+
+            try {
+                await apiRequest('/run', { method: 'POST' });
+                showAlert('success', 'Automation workflow completed successfully');
+                loadDashboardData();
+                loadActivity();
+            } catch (error) {
+                showAlert('error', 'Automation failed: ' + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                initLucideIcons();
+            }
+        }
+
+        // ========== REMINDERS ==========
+        async function loadRemindersData() {
+            try {
+                const [allReminders, dueReminders] = await Promise.all([
+                    apiRequest('/reminders'),
+                    apiRequest('/reminders/due')
+                ]);
+
+                renderRemindersTable(allReminders);
+                renderDueRemindersTable(dueReminders);
+            } catch (error) {
+                showAlert('error', 'Failed to load reminders: ' + error.message);
+            }
+        }
+
+        function renderRemindersTable(reminders) {
+            const tbody = document.getElementById('remindersListBody');
+            tbody.innerHTML = '';
+
+            if (!reminders || reminders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">No reminders found</td></tr>';
+                return;
+            }
+
+            reminders.forEach(r => {
+                const badgeClass = r.status === 'sent' ? 'badge-sent' : r.status === 'failed' ? 'badge-failed' : 'badge-pending';
+                const row = `
+                    <tr>
+                        <td>${escapeHtml(r.reminder_id)}</td>
+                        <td>${escapeHtml(r.contact_email)}</td>
+                        <td>${escapeHtml(r.subject)}</td>
+                        <td>${escapeHtml(r.schedule_time)}</td>
+                        <td><span class="badge ${badgeClass}">${r.status}</span></td>
+                        <td>
+                            <button class="btn btn-outline btn-sm" onclick="sendReminderFromPage('${r.reminder_id}')" style="padding: 4px 8px;">
+                                <i data-lucide="send" width="14" height="14"></i> Send
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            initLucideIcons();
+        }
+
+        function renderDueRemindersTable(reminders) {
+            const tbody = document.getElementById('dueRemindersBody');
+            tbody.innerHTML = '';
+
+            if (!reminders || reminders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">No due reminders</td></tr>';
+                return;
+            }
+
+            reminders.forEach(r => {
+                const row = `
+                    <tr>
+                        <td>${escapeHtml(r.reminder_id)}</td>
+                        <td>${escapeHtml(r.subject)}</td>
+                        <td>${escapeHtml(r.schedule_time)}</td>
+                        <td><span class="badge badge-pending">${r.status}</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="sendReminderFromPage('${r.reminder_id}')" style="padding: 4px 8px;">
+                                Send Now
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            initLucideIcons();
+        }
+
+        async function sendReminderFromPage(reminderId) {
+            try {
+                const result = await apiRequest(`/reminders/${reminderId}/send`, { method: 'POST' });
+                showAlert('success', result.message || 'Reminder sent successfully');
+                loadRemindersData();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', 'Failed to send reminder: ' + error.message);
+            }
+        }
+
+        async function sendDueRemindersFromPage() {
+            try {
+                const result = await apiRequest('/send-due', { method: 'POST' });
+                showAlert('success', result.message || 'Due reminders processing');
+                loadRemindersData();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', 'Failed to send due reminders: ' + error.message);
+            }
+        }
+
+        async function openReminderModal() {
+            document.getElementById('reminderModalOverlay').classList.add('open');
+        }
+
+        function closeReminderModal() {
+            document.getElementById('reminderModalOverlay').classList.remove('open');
+            document.getElementById('createReminderModalForm').reset();
+        }
+
+        document.getElementById('createReminderModalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader" width="16" height="16" style="animation: spin 1s linear infinite;"></i>';
+            btn.disabled = true;
+            initLucideIcons();
+
+            const reminder = {
+                reminder_id: document.getElementById('modalReminderId').value,
+                contact_email: document.getElementById('modalContactEmail').value,
+                subject: document.getElementById('modalReminderSubject').value,
+                schedule_time: document.getElementById('modalReminderSchedule').value,
+                message: document.getElementById('modalReminderMessage').value
+            };
+
+            try {
+                await apiRequest('/reminders', { method: 'POST', body: JSON.stringify(reminder) });
+                showAlert('success', 'Reminder created successfully');
+                closeReminderModal();
+                loadRemindersData();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                initLucideIcons();
             }
         });
 
-        // Initialize
-        loadStats();
-        loadReminders();
-        loadLogs();
-        setInterval(loadStats, 30000);
-        setInterval(loadReminders, 30000);
+        document.getElementById('createReminderForm').addEventListener('submit', async (e) => {
+            e.preventDialog || e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader" width="16" height="16" style="animation: spin 1s linear infinite;"></i>';
+            btn.disabled = true;
+
+            const reminder = {
+                reminder_id: document.getElementById('newReminderId').value,
+                contact_email: document.getElementById('newContactEmail').value,
+                subject: document.getElementById('newReminderSubject').value,
+                schedule_time: document.getElementById('newReminderSchedule').value,
+                message: document.getElementById('newReminderMessage').value
+            };
+
+            try {
+                await apiRequest('/reminders', { method: 'POST', body: JSON.stringify(reminder) });
+                showAlert('success', 'Reminder created successfully');
+                document.getElementById('createReminderForm').reset();
+                loadRemindersData();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // ========== CAMPAIGNS ==========
+        async function loadCampaigns() {
+            try {
+                const campaigns = await apiRequest('/campaigns');
+                renderCampaignsListTable(campaigns);
+                if (currentPage === 'dashboard') renderCampaignsTable(campaigns);
+            } catch (error) {
+                showAlert('error', 'Failed to load campaigns: ' + error.message);
+            }
+        }
+
+        function renderCampaignsListTable(campaigns) {
+            const tbody = document.getElementById('campaignsListBody');
+            tbody.innerHTML = '';
+
+            if (!campaigns || campaigns.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">No campaigns found</td></tr>';
+                return;
+            }
+
+            campaigns.forEach(c => {
+                const total = (c.sent_count || 0) + (c.failed_count || 0);
+                const badgeClass = c.status === 'completed' ? 'badge-sent' : c.status === 'failed' ? 'badge-failed' : c.status === 'draft' ? 'badge-draft' : 'badge-scheduled';
+                const row = `
+                    <tr>
+                        <td>${escapeHtml(c.name || '—')}</td>
+                        <td>${total}</td>
+                        <td>${c.sent_count || 0}</td>
+                        <td>${c.failed_count || 0}</td>
+                        <td><span class="badge ${badgeClass}">${escapeHtml(c.status)}</span></td>
+                        <td>${escapeHtml(c.created_at || '—')}</td>
+                        <td>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="btn btn-outline btn-sm" onclick="viewCampaignDetails(${c.id})" style="padding: 4px 6px;">
+                                    <i data-lucide="eye" width="14" height="14"></i>
+                                </button>
+                                <button class="btn btn-outline btn-sm" onclick="editCampaign(${c.id})" style="padding: 4px 6px;">
+                                    <i data-lucide="edit-3" width="14" height="14"></i>
+                                </button>
+                                <button class="btn btn-outline btn-sm" style="color: var(--danger); padding: 4px 6px;" onclick="deleteCampaign(${c.id})">
+                                    <i data-lucide="trash-2" width="14" height="14"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            initLucideIcons();
+        }
+
+        function filterCampaigns() {
+            const search = document.getElementById('campaignSearch').value.toLowerCase();
+            const status = document.getElementById('campaignStatusFilter').value;
+            const rows = document.querySelectorAll('#campaignsListTable tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const statusCell = row.children[4]?.textContent || '';
+                const matchSearch = text.includes(search);
+                const matchStatus = !status || statusCell.includes(status);
+                row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+            });
+        }
+
+        function openCampaignModal() {
+            document.getElementById('campaignModalOverlay').classList.add('open');
+        }
+
+        function closeCampaignModal() {
+            document.getElementById('campaignModalOverlay').classList.remove('open');
+            document.getElementById('createCampaignForm').reset();
+            document.getElementById('campaignRecurringOptions').style.display = 'none';
+        }
+
+        document.getElementById('campaignRecurring').addEventListener('change', function() {
+            document.getElementById('campaignRecurringOptions').style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('createCampaignForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader" width="16" height="16" style="animation: spin 1s linear infinite;"></i>';
+            btn.disabled = true;
+
+            const dateVal = document.getElementById('campaignDate').value;
+            const timeVal = document.getElementById('campaignTime').value;
+            const scheduleTime = dateVal && timeVal ? dateVal + ' ' + timeVal : '';
+
+            const campaign = {
+                name: document.getElementById('campaignName').value,
+                description: document.getElementById('campaignDescription').value,
+                template_name: document.getElementById('campaignTemplate').value
+            };
+
+            try {
+                await apiRequest('/campaigns', { method: 'POST', body: JSON.stringify(campaign) });
+                showAlert('success', 'Campaign created successfully');
+                closeCampaignModal();
+                loadCampaigns();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                initLucideIcons();
+            }
+        });
+
+        function viewCampaignDetails(id) {
+            showAlert('info', 'Campaign detail view - backend endpoint needed: GET /api/campaigns/' + id);
+        }
+
+        function editCampaign(id) {
+            showAlert('info', 'Campaign edit - backend endpoint needed: PUT /api/campaigns/' + id);
+        }
+
+        function deleteCampaign(id) {
+            if (confirm('Are you sure you want to delete this campaign?')) {
+                showAlert('info', 'Campaign delete - backend endpoint needed: DELETE /api/campaigns/' + id);
+            }
+        }
+
+        // ========== CONTACTS ==========
+        async function loadContactsData() {
+            try {
+                // Backend doesn't have contacts endpoint yet - load from CSV data if available
+                // For now, show placeholder
+                const tbody = document.getElementById('contactsTableBody');
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);"><i data-lucide="users" width="32" height="32"></i><div style="margin-top: 12px;">Contacts endpoint not available</div><div style="font-size: 0.875rem; margin-top: 4px;">Backend endpoint needed: GET /api/contacts</div></td></tr>';
+                initLucideIcons();
+                document.getElementById('contactTotal').textContent = '—';
+                document.getElementById('contactInvalid').textContent = '—';
+            } catch (error) {
+                showAlert('error', 'Failed to load contacts: ' + error.message);
+            }
+        }
+
+        function filterContacts(searchTerm) {
+            const rows = document.querySelectorAll('#contactsTable tbody tr');
+            const term = (searchTerm || document.getElementById('contactSearch').value).toLowerCase();
+            rows.forEach(row => {
+                if (row.children[0]) {
+                    row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+                }
+            });
+        }
+
+        async function uploadContactsCSV() {
+            const fileInput = document.getElementById('contactsFileInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert('error', 'Please select a CSV file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch(API_BASE + '/contacts/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Upload failed' }));
+                    throw new Error(errorData.detail || 'Upload failed');
+                }
+                const result = await response.json();
+                showAlert('success', result.message || 'Contacts uploaded successfully');
+                loadContactsData();
+            } catch (error) {
+                showAlert('error', error.message);
+            }
+        }
+
+        // ========== REPORTS ==========
+        async function loadReportsData() {
+            try {
+                const stats = await apiRequest('/stats');
+                const logs = await apiRequest('/logs?limit=20');
+
+                document.getElementById('reportTotal').textContent = stats.total_reminders;
+                document.getElementById('reportSent').textContent = stats.sent;
+                document.getElementById('reportFailed').textContent = stats.failed;
+                const total = stats.total_reminders || 0;
+                const sent = stats.sent || 0;
+                const rate = total > 0 ? ((sent / total) * 100).toFixed(1) : '0';
+                document.getElementById('reportSuccessRate').textContent = rate + '%';
+                document.getElementById('reportTotalTrend').textContent = rate + '% success rate';
+
+                renderReportsTable(logs);
+            } catch (error) {
+                showAlert('error', 'Failed to load reports data: ' + error.message);
+            }
+        }
+
+        function renderReportsTable(logs) {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">No reports found</td></tr>';
+                return;
+            }
+
+            logs.forEach((log, index) => {
+                const badgeClass = log.status === 'sent' ? 'badge-sent' : 'badge-failed';
+                const row = `
+                    <tr>
+                        <td>Report #${index + 1}</td>
+                        <td>${escapeHtml(log.timestamp || '—')}</td>
+                        <td>1</td>
+                        <td>${log.status === 'sent' ? '1' : '0'}</td>
+                        <td>${log.status === 'failed' ? '1' : '0'}</td>
+                        <td>
+                            <button class="btn btn-outline btn-sm" onclick="downloadReport('log')" style="padding: 4px 8px;">
+                                <i data-lucide="download" width="14" height="14"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            initLucideIcons();
+        }
+
+        function downloadReport(type) {
+            showAlert('info', 'Report download - backend endpoint needed: GET /api/reports/download/' + type);
+        }
+
+        // ========== SETTINGS ==========
+        async function loadSettingsData() {
+            // Settings loaded from .env - not exposed via backend for security
+            document.getElementById('settingSmtpServer').value = 'smtp.gmail.com';
+            document.getElementById('settingSmtpPort').value = '587';
+            document.getElementById('settingSenderEmail').value = 'your-email@gmail.com (from .env)';
+        }
+
+        async function testSmtpConnection() {
+            showAlert('info', 'SMTP test - requires backend endpoint: POST /api/settings/test-smtp');
+        }
+
+        function saveSettings() {
+            showAlert('info', 'Settings saved to .env file (manual edit required)');
+        }
+
+        // ========== LOGS ==========
+        function viewLogs() {
+            navigate('dashboard');
+            showAlert('info', 'System logs - view via logs/email_automation.log file');
+        }
+
+        // ========== INITIALIZATION ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initLucideIcons();
+            navigate('dashboard');
+        });
+
+        // Expose functions globally for HTML onclick
+        window.navigate = navigate;
+        window.toggleSidebar = toggleSidebar;
+        window.runAutomation = runAutomation;
+        window.sendReminderFromPage = sendReminderFromPage;
+        window.sendDueRemindersFromPage = sendDueRemindersFromPage;
+        window.openReminderModal = openReminderModal;
+        window.closeReminderModal = closeReminderModal;
+        window.openCampaignModal = openCampaignModal;
+        window.closeCampaignModal = closeCampaignModal;
+        window.viewCampaignDetails = viewCampaignDetails;
+        window.editCampaign = editCampaign;
+        window.deleteCampaign = deleteCampaign;
+        window.loadRemindersData = loadRemindersData;
+        window.loadCampaigns = loadCampaigns;
+        window.loadContactsData = loadContactsData;
+        window.filterContacts = filterContacts;
+        window.uploadContactsCSV = uploadContactsCSV;
+        window.loadReportsData = loadReportsData;
+        window.downloadReport = downloadReport;
+        window.testSmtpConnection = testSmtpConnection;
+        window.saveSettings = saveSettings;
+        window.viewLogs = viewLogs;
+        window.filterCampaigns = filterCampaigns;
     </script>
 </body>
 </html>
