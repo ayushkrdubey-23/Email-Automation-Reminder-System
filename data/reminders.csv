@@ -1,0 +1,7 @@
+reminder_id,contact_email,subject,template_name,schedule_time,message
+REM-001,john.doe@example.com,Project Deadline Reminder,reminder.txt,2026-11-20 09:00:00,Your project submission is due on November 20th. Please ensure all tasks are completed.
+REM-002,jane.smith@example.com,Interview Scheduled,reminder.txt,2026-11-20 10:00:00,You have a candidate interview scheduled for tomorrow at 10:00 AM.
+REM-003,mike.johnson@example.com,Follow-up on Proposal,reminder.txt,2026-11-20 14:00:00,Don't forget to follow up with the client regarding the proposal sent last week.
+REM-004,emily.davis@example.com,Payment Due Alert,reminder.txt,2026-11-20 09:30:00,Your invoice payment is due in 3 days. Please process the payment to avoid late fees.
+REM-005,sarah.wilson@example.com,Webinar Reminder,reminder.txt,2026-11-20 11:00:00,The Python Automation webinar starts in 1 hour. Join link: https://example.com/webinar
+REM-006,robert.brown@example.com,Task Notification,reminder.txt,2026-11-20 16:00:00,Your monthly admin tasks are due by end of day tomorrow.
