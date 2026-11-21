@@ -157,12 +157,26 @@
             try {
                 const res = await fetch(`${API_BASE}/stats`);
                 const data = await res.json();
-                document.getElementById('stat-total').textContent = data.total_reminders;
-                document.getElementById('stat-sent').textContent = data.sent;
-                document.getElementById('stat-failed').textContent = data.failed;
-                document.getElementById('stat-pending').textContent = data.pending;
+                updateStat('stat-total', data.total_reminders);
+                updateStat('stat-sent', data.sent);
+                updateStat('stat-failed', data.failed);
+                updateStat('stat-pending', data.pending);
             } catch (e) {
                 console.error('Failed to load stats', e);
+            }
+        }
+
+        function updateStat(elementId, newValue) {
+            const el = document.getElementById(elementId);
+            const oldValue = el.textContent;
+            if (oldValue !== String(newValue)) {
+                el.style.transform = 'scale(1.2)';
+                el.style.color = '#2563eb';
+                setTimeout(() => {
+                    el.textContent = newValue;
+                    el.style.transform = 'scale(1)';
+                    el.style.color = '#1f2937';
+                }, 200);
             }
         }
 
@@ -203,8 +217,11 @@
                 } else {
                     showAlert('alert-error', `Failed: ${data.message}`);
                 }
-                loadReminders();
-                loadStats();
+                // Small delay to ensure DB is updated, then refresh stats and reminders
+                setTimeout(() => {
+                    loadStats();
+                    loadReminders();
+                }, 500);
             } catch (e) {
                 showAlert('alert-error', 'Error sending reminder');
             }
@@ -215,8 +232,12 @@
                 const res = await fetch(`${API_BASE}/send-due`, { method: 'POST' });
                 const data = await res.json();
                 showAlert('alert-success', data.message);
-                loadReminders();
-                loadStats();
+                // Background task needs time to process, delay stats refresh
+                setTimeout(() => {
+                    loadStats();
+                    loadReminders();
+                    loadLogs();
+                }, 1500);
             } catch (e) {
                 showAlert('alert-error', 'Error sending due reminders');
             }
@@ -265,8 +286,10 @@
                 if (res.ok) {
                     showAlert('alert-success', 'Reminder created successfully!');
                     document.getElementById('create-reminder-form').reset();
-                    loadReminders();
-                    loadStats();
+                    setTimeout(() => {
+                        loadReminders();
+                        loadStats();
+                    }, 500);
                 } else {
                     showAlert('alert-error', data.detail || 'Failed to create reminder');
                 }
