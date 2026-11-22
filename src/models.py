@@ -79,3 +79,45 @@ class HealthResponse(BaseModel):
     status: str
     service: str
     version: str
+
+
+# ========== CONTACT MODELS ==========
+class ContactResponse(BaseModel):
+    name: str
+    email: str
+    role: Optional[str] = None
+    company: Optional[str] = None
+    department: Optional[str] = None
+    valid: bool = True
+
+
+class ContactUploadResult(BaseModel):
+    success: bool
+    message: str
+    imported: int
+    total: int
+    invalid: int
+
+
+# ========== UPDATE MODELS ==========
+class ReminderUpdate(BaseModel):
+    contact_email: Optional[EmailStr] = None
+    subject: Optional[str] = None
+    schedule_time: Optional[str] = None
+    message: Optional[str] = None
+    status: Optional[str] = None
+
+
+class CampaignUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    template_name: Optional[str] = None
+    status: Optional[str] = None
+
+
+# ========== REPORT MODELS ==========
+class ReportFile(BaseModel):
+    filename: str
+    size: int
+    created_at: str
+    type: str  # 'sent', 'failed', 'report', 'summary'
