@@ -2335,9 +2335,17 @@
                         <td>${escapeHtml(r.schedule_time)}</td>
                         <td><span class="badge ${badgeClass}">${r.status}</span></td>
                         <td>
-                            <button class="btn btn-outline btn-sm" onclick="sendReminderFromPage('${r.reminder_id}')" style="padding: 4px 8px;">
-                                <i data-lucide="send" width="14" height="14"></i> Send
-                            </button>
+                            <div style="display: flex; gap: 4px;">
+                                ${r.status === 'pending' ? `<button class="btn btn-outline btn-sm" onclick="sendReminderFromPage('${r.reminder_id}')" style="padding: 4px 8px;">
+                                    <i data-lucide="send" width="14" height="14"></i> Send
+                                </button>` : ''}
+                                <button class="btn btn-outline btn-sm" onclick="editReminder('${r.reminder_id}')" style="padding: 4px 8px;">
+                                    <i data-lucide="edit-3" width="14" height="14"></i>
+                                </button>
+                                <button class="btn btn-outline btn-sm" style="color: var(--danger); padding: 4px 8px;" onclick="deleteReminder('${r.reminder_id}')">
+                                    <i data-lucide="trash-2" width="14" height="14"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -2385,6 +2393,38 @@
             }
         }
 
+        async function editReminder(reminderId) {
+            try {
+                const reminder = await apiRequest(`/reminders/${reminderId}`);
+                const newSubject = prompt('Enter new subject:', reminder.subject);
+                if (newSubject === null) return;
+
+                await apiRequest(`/reminders/${reminderId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject: newSubject }),
+                });
+                showAlert('success', 'Reminder updated successfully');
+                loadRemindersData();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', error.message);
+            }
+        }
+
+        async function deleteReminder(reminderId) {
+            if (!confirm('Are you sure you want to delete this reminder?')) return;
+
+            try {
+                await apiRequest(`/reminders/${reminderId}`, { method: 'DELETE' });
+                showAlert('success', 'Reminder deleted successfully');
+                loadRemindersData();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', error.message);
+            }
+        }
+
         async function sendDueRemindersFromPage() {
             try {
                 const result = await apiRequest('/send-due', { method: 'POST' });
@@ -2394,6 +2434,16 @@
             } catch (error) {
                 showAlert('error', 'Failed to send due reminders: ' + error.message);
             }
+        }
+
+        function filterReminders() {
+            const status = document.getElementById('reminderStatusFilter').value;
+            const rows = document.querySelectorAll('#remindersListTable tbody tr');
+            rows.forEach(row => {
+                const statusCell = row.children[4]?.textContent || '';
+                const matchStatus = !status || statusCell.includes(status);
+                row.style.display = matchStatus ? '' : 'none';
+            });
         }
 
         async function openReminderModal() {
@@ -2575,43 +2625,105 @@
             }
         });
 
-        function viewCampaignDetails(id) {
-            showAlert('info', 'Campaign detail view - backend endpoint needed: GET /api/campaigns/' + id);
+        async function viewCampaignDetails(id) {
+            try {
+                const campaigns = await apiRequest('/campaigns');
+                const campaign = campaigns.find(c => c.id === id);
+                if (campaign) {
+                    const details = `
+                        <strong>Name:</strong> ${escapeHtml(campaign.name)}<br>
+                        <strong>Description:</strong> ${escapeHtml(campaign.description || '—')}<br>
+                        <strong>Template:</strong> ${escapeHtml(campaign.template_name)}<br>
+                        <strong>Status:</strong> ${escapeHtml(campaign.status)}<br>
+                        <strong>Sent:</strong> ${campaign.sent_count}<br>
+                        <strong>Failed:</strong> ${campaign.failed_count}<br>
+                        <strong>Created:</strong> ${escapeHtml(campaign.created_at)}
+                    `;
+                    showAlert('info', details);
+                } else {
+                    showAlert('error', 'Campaign not found');
+                }
+            } catch (error) {
+                showAlert('error', 'Failed to load campaign details: ' + error.message);
+            }
         }
 
-        function editCampaign(id) {
-            showAlert('info', 'Campaign edit - backend endpoint needed: PUT /api/campaigns/' + id);
+        async function editCampaign(id) {
+            const campaigns = await apiRequest('/campaigns');
+            const campaign = campaigns.find(c => c.id === id);
+            if (!campaign) {
+                showAlert('error', 'Campaign not found');
+                return;
+            }
+
+            const newName = prompt('Enter new campaign name:', campaign.name);
+            if (newName === null) return; // User cancelled
+
+            try {
+                await apiRequest(`/campaigns/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName }),
+                });
+                showAlert('success', 'Campaign updated successfully');
+                loadCampaigns();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', error.message);
+            }
         }
 
-        function deleteCampaign(id) {
-            if (confirm('Are you sure you want to delete this campaign?')) {
-                showAlert('info', 'Campaign delete - backend endpoint needed: DELETE /api/campaigns/' + id);
+        async function deleteCampaign(id) {
+            if (!confirm('Are you sure you want to delete this campaign?')) return;
+
+            try {
+                await apiRequest(`/campaigns/${id}`, { method: 'DELETE' });
+                showAlert('success', 'Campaign deleted successfully');
+                loadCampaigns();
+                if (currentPage === 'dashboard') loadDashboardData();
+            } catch (error) {
+                showAlert('error', error.message);
             }
         }
 
         // ========== CONTACTS ==========
         async function loadContactsData() {
             try {
-                // Backend doesn't have contacts endpoint yet - load from CSV data if available
-                // For now, show placeholder
+                const contacts = await apiRequest('/contacts');
                 const tbody = document.getElementById('contactsTableBody');
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);"><i data-lucide="users" width="32" height="32"></i><div style="margin-top: 12px;">Contacts endpoint not available</div><div style="font-size: 0.875rem; margin-top: 4px;">Backend endpoint needed: GET /api/contacts</div></td></tr>';
+                tbody.innerHTML = '';
+
+                if (!contacts || contacts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">No contacts found</td></tr>';
+                    document.getElementById('contactTotal').textContent = '0';
+                    document.getElementById('contactInvalid').textContent = '0';
+                    return;
+                }
+
+                let invalidCount = 0;
+                contacts.forEach(c => {
+                    if (!c.valid) invalidCount++;
+                    const badgeClass = c.valid ? '' : 'text-danger';
+                    const row = `
+                        <tr>
+                            <td>${escapeHtml(c.name)}</td>
+                            <td><span class="${badgeClass}">${escapeHtml(c.email)}</span></td>
+                            <td>${escapeHtml(c.role || '—')}</td>
+                            <td>${escapeHtml(c.company || '—')}</td>
+                            <td>${escapeHtml(c.department || '—')}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                document.getElementById('contactTotal').textContent = contacts.length;
+                document.getElementById('contactInvalid').textContent = invalidCount;
                 initLucideIcons();
-                document.getElementById('contactTotal').textContent = '—';
-                document.getElementById('contactInvalid').textContent = '—';
             } catch (error) {
                 showAlert('error', 'Failed to load contacts: ' + error.message);
+                const tbody = document.getElementById('contactsTableBody');
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">Failed to load contacts</td></tr>';
             }
-        }
-
-        function filterContacts(searchTerm) {
-            const rows = document.querySelectorAll('#contactsTable tbody tr');
-            const term = (searchTerm || document.getElementById('contactSearch').value).toLowerCase();
-            rows.forEach(row => {
-                if (row.children[0]) {
-                    row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
-                }
-            });
         }
 
         async function uploadContactsCSV() {
@@ -2627,7 +2739,7 @@
             try {
                 const response = await fetch(API_BASE + '/contacts/upload', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
                 });
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ detail: 'Upload failed' }));
@@ -2635,6 +2747,7 @@
                 }
                 const result = await response.json();
                 showAlert('success', result.message || 'Contacts uploaded successfully');
+                fileInput.value = '';
                 loadContactsData();
             } catch (error) {
                 showAlert('error', error.message);
@@ -2644,10 +2757,12 @@
         // ========== REPORTS ==========
         async function loadReportsData() {
             try {
-                const stats = await apiRequest('/stats');
-                const logs = await apiRequest('/logs?limit=20');
+                const [stats, reports] = await Promise.all([
+                    apiRequest('/stats'),
+                    apiRequest('/reports'),
+                ]);
 
-                document.getElementById('reportTotal').textContent = stats.total_reminders;
+                document.getElementById('reportTotal').textContent = reports.length;
                 document.getElementById('reportSent').textContent = stats.sent;
                 document.getElementById('reportFailed').textContent = stats.failed;
                 const total = stats.total_reminders || 0;
@@ -2656,32 +2771,32 @@
                 document.getElementById('reportSuccessRate').textContent = rate + '%';
                 document.getElementById('reportTotalTrend').textContent = rate + '% success rate';
 
-                renderReportsTable(logs);
+                renderReportsTable(reports);
             } catch (error) {
                 showAlert('error', 'Failed to load reports data: ' + error.message);
             }
         }
 
-        function renderReportsTable(logs) {
+        function renderReportsTable(reports) {
             const tbody = document.getElementById('reportsTableBody');
             tbody.innerHTML = '';
 
-            if (!logs || logs.length === 0) {
+            if (!reports || reports.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">No reports found</td></tr>';
                 return;
             }
 
-            logs.forEach((log, index) => {
-                const badgeClass = log.status === 'sent' ? 'badge-sent' : 'badge-failed';
+            reports.forEach((report, index) => {
+                const typeClass = report.type === 'sent' ? 'badge-sent' : report.type === 'failed' ? 'badge-failed' : 'badge-pending';
                 const row = `
                     <tr>
-                        <td>Report #${index + 1}</td>
-                        <td>${escapeHtml(log.timestamp || '—')}</td>
-                        <td>1</td>
-                        <td>${log.status === 'sent' ? '1' : '0'}</td>
-                        <td>${log.status === 'failed' ? '1' : '0'}</td>
+                        <td>${escapeHtml(report.filename)}</td>
+                        <td>${escapeHtml(report.created_at)}</td>
+                        <td>${report.type}</td>
+                        <td><span class="badge ${typeClass}">${report.type}</span></td>
+                        <td>${(report.size / 1024).toFixed(1)} KB</td>
                         <td>
-                            <button class="btn btn-outline btn-sm" onclick="downloadReport('log')" style="padding: 4px 8px;">
+                            <button class="btn btn-outline btn-sm" onclick="downloadReport('${escapeHtml(report.filename)}')" style="padding: 4px 8px;">
                                 <i data-lucide="download" width="14" height="14"></i>
                             </button>
                         </td>
@@ -2692,8 +2807,13 @@
             initLucideIcons();
         }
 
-        function downloadReport(type) {
-            showAlert('info', 'Report download - backend endpoint needed: GET /api/reports/download/' + type);
+        async function downloadReport(filename) {
+            try {
+                window.open(API_BASE + '/reports/download/' + filename, '_blank');
+                showAlert('success', 'Downloading ' + filename);
+            } catch (error) {
+                showAlert('error', 'Failed to download report: ' + error.message);
+            }
         }
 
         // ========== SETTINGS ==========
@@ -2730,6 +2850,8 @@
         window.runAutomation = runAutomation;
         window.sendReminderFromPage = sendReminderFromPage;
         window.sendDueRemindersFromPage = sendDueRemindersFromPage;
+        window.editReminder = editReminder;
+        window.deleteReminder = deleteReminder;
         window.openReminderModal = openReminderModal;
         window.closeReminderModal = closeReminderModal;
         window.openCampaignModal = openCampaignModal;
@@ -2741,6 +2863,7 @@
         window.loadCampaigns = loadCampaigns;
         window.loadContactsData = loadContactsData;
         window.filterContacts = filterContacts;
+        window.filterReminders = filterReminders;
         window.uploadContactsCSV = uploadContactsCSV;
         window.loadReportsData = loadReportsData;
         window.downloadReport = downloadReport;
